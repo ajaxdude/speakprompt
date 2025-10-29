@@ -26,6 +26,19 @@ if(PKG_CONFIG_FOUND)
     if(NOT PULSE_FOUND)
         message(WARNING "PulseAudio not found, audio capture may not work")
     endif()
+    
+    # Check for SDL2 (important for audio capture in whisper.cpp)
+    pkg_check_modules(SDL2 sdl2)
+    if(SDL2_FOUND)
+        message(STATUS "SDL2 found: ${SDL2_VERSION}")
+        set(WHISPER_SDL2 ON)
+    else()
+        message(WARNING "SDL2 not found, audio capture may have limited functionality")
+        message(STATUS "Install SDL2 development packages:")
+        message(STATUS "  Ubuntu/Debian: sudo apt install libsdl2-dev")
+        message(STATUS "  Fedora/RHEL: sudo dnf install SDL2 SDL2-devel")
+        message(STATUS "  Arch Linux: sudo pacman -S sdl2")
+    endif()
 endif()
 
 if(NOT GUI_BACKEND)
@@ -33,11 +46,14 @@ if(NOT GUI_BACKEND)
     add_definitions(-DNO_GUI)
 endif()
 
-# Whisper.cpp with Vulkan support
+# Whisper.cpp with Vulkan and SDL2 support
 set(WHISPER_CPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp)
 
 # Enable Vulkan support for Whisper.cpp
 option(GGML_VULKAN "Enable Vulkan support for Whisper.cpp" ON)
+
+# Enable SDL2 support for Whisper.cpp (important for audio capture)
+option(WHISPER_SDL2 "Enable SDL2 support for Whisper.cpp" ON)
 
 add_subdirectory(${WHISPER_CPP_ROOT} whisper-cpp-build)
 

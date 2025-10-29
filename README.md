@@ -15,15 +15,37 @@ A high-performance Linux terminal application that provides **real-time speech t
 
 ### Prerequisites
 
+#### Core Dependencies
 ```bash
 # Fedora/RHEL
-sudo dnf install cmake gcc-c++ pulseaudio-libs-devel pkg-config vulkan-devel
+sudo dnf install cmake gcc-c++ pkg-config pulseaudio-libs-devel vulkan-devel SDL2 SDL2-devel
 
 # Ubuntu/Debian  
-sudo apt install cmake g++ libpulse-dev pkg-config libvulkan-dev
+sudo apt install cmake g++ pkg-config libpulse-dev libvulkan-dev libsdl2-dev
 
 # Arch Linux
-sudo pacman -S cmake gcc pulseaudio libpulse pkgconf vulkan-devel
+sudo pacman -S cmake gcc pkgconf pulseaudio libpulse vulkan-devel sdl2
+
+# openSUSE
+sudo zypper install cmake gcc-c++ pkg-config pulseaudio-devel vulkan-devel libSDL2-devel
+
+# Solus
+sudo eopkg install cmake gcc pkgconfig pulseaudio-devel vulkan-devel sdl2-devel
+```
+
+#### Optional GPU Drivers (for Vulkan acceleration)
+```bash
+# AMD GPUs (most distributions)
+# Usually included with mesa drivers
+
+# NVIDIA GPUs
+# Ubuntu/Debian: sudo apt install nvidia-driver-535
+# Fedora: sudo dnf install akmod-nvidia
+# Arch: sudo pacman -S nvidia
+
+# Intel GPUs (integrated graphics usually work out of the box)
+# Ubuntu: sudo apt install intel-media-driver
+# Fedora: sudo dnf install intel-media-driver
 ```
 
 ### Build & Run
@@ -33,9 +55,9 @@ sudo pacman -S cmake gcc pulseaudio libpulse pkgconf vulkan-devel
 git clone https://github.com/yourusername/speakprompt.git
 cd speakprompt
 
-# Configure with Vulkan support
+# Configure with Vulkan and SDL2 support
 mkdir build && cd build
-cmake .. -DGGML_VULKAN=1
+cmake .. -DGGML_VULKAN=1 -DWHISPER_SDL2=ON
 
 # Build
 make -j$(nproc)
@@ -110,7 +132,7 @@ speakprompt/
 
 ## 🔍 Troubleshooting
 
-**Audio Issues:**
+### Audio Issues
 ```bash
 # Check audio system
 pactl info
@@ -120,9 +142,29 @@ systemctl --user status pipewire pipewire-pulse
 
 # Test microphone
 arecord -d 5 test.wav && aplay test.wav
+
+# Check available audio devices
+pactl list sources
+
+# Restart audio service if needed
+systemctl --user restart pipewire pipewire-pulse
 ```
 
-**GPU Issues:**
+### SDL2 Issues
+```bash
+# Check if SDL2 is installed
+pkg-config --modversion sdl2
+
+# Install SDL2 if missing
+# Ubuntu/Debian: sudo apt install libsdl2-dev
+# Fedora/RHEL: sudo dnf install SDL2 SDL2-devel
+# Arch Linux: sudo pacman -S sdl2
+
+# Verify SDL2 detection
+cmake .. -DWHISPER_SDL2=ON | grep SDL2
+```
+
+### GPU/Vulkan Issues
 ```bash
 # Check Vulkan support
 vulkaninfo --summary
@@ -130,14 +172,40 @@ vulkaninfo --summary
 # Install GPU drivers if needed
 # AMD: sudo dnf install mesa-vulkan-drivers
 # NVIDIA: Install proprietary drivers
+
+# Test Vulkan with a simple program
+vkcube  # Should show a rotating cube if Vulkan works
 ```
 
-**Build Issues:**
+### Build Issues
 ```bash
 # Clean build
 rm -rf build && mkdir build && cd build
-cmake .. -DGGML_VULKAN=1
+cmake .. -DGGML_VULKAN=1 -DWHISPER_SDL2=ON
 make -j$(nproc)
+
+# If build fails due to missing dependencies:
+# Ubuntu/Debian:
+sudo apt install cmake g++ pkg-config libpulse-dev libvulkan-dev libsdl2-dev
+
+# Fedora/RHEL:
+sudo dnf install cmake gcc-c++ pkg-config pulseaudio-libs-devel vulkan-devel SDL2 SDL2-devel
+
+# Arch Linux:
+sudo pacman -S cmake gcc pkgconf pulseaudio libpulse vulkan-devel sdl2
+```
+
+### Model Issues
+```bash
+# Check if model exists
+ls -la models/ggml-large-v3-turbo.bin
+
+# Download model if missing
+mkdir -p models
+wget -O models/ggml-large-v3-turbo.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin
+
+# Alternative model (smaller, faster download)
+wget -O models/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
 ```
 
 ## 📄 License
