@@ -95,13 +95,16 @@ private:
     }
 
     void stop_recording() {
-        std::cout << "\n⏹️  Stopping transcription..." << std::endl;
-        
         audio_capture->stop_capture();
         transcription_engine->stop_transcription();
         is_recording = false;
+        
+        // Add a small delay to ensure final transcription is processed
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        
         terminal_output->show_status("OFF AIR");
         
+        std::cout << "\n⏹️  Transcription stopped." << std::endl;
         std::cout << "Press Enter to start again, Ctrl+C to quit" << std::endl;
     }
 };
