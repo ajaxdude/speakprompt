@@ -1,35 +1,67 @@
 # SpeakPrompt
 
-A Linux desktop application that provides real-time speech transcription for CLI developers. Use a global hotkey to start/pause transcription of spoken prompts, making it easier to generate commands for AI coding assistants.
+A Linux desktop application that provides real-time speech transcription for CLI developers. Use a simple interface to transcribe spoken prompts, making it easier to generate commands for AI coding assistants.
 
 ## Features
 
 - **Simple Interface**: Clean terminal-based interface
 - **Real-time Transcription**: Uses Whisper.cpp for live microphone transcription
 - **Terminal Output**: Transcription results displayed in terminal for easy copy-paste
-- **Minimal Dependencies**: Works without complex GUI frameworks
-- **AppImage Distribution**: Self-contained executable with minimal dependencies
+- **PipeWire/PulseAudio Support**: Works with modern Linux audio systems
+- **Cross-platform Audio**: Supports both PipeWire and traditional PulseAudio systems
 
 ## Quick Start
 
 ### Building from Source
 
-1. Install dependencies (Fedora):
-   ```bash
-   sudo dnf install cmake gcc-c++ gtk3-devel pulseaudio-libs-devel libX11-devel
-   ```
+#### Fedora / RHEL / CentOS
+```bash
+# Install dependencies
+sudo dnf install cmake gcc-c++ pulseaudio-libs-devel pkg-config
 
-2. Clone and build:
-   ```bash
-   git clone --recursive https://github.com/yourusername/speakprompt.git
-   cd speakprompt
-   ./build.sh
-   ```
+# Clone and build
+git clone https://github.com/yourusername/speakprompt.git
+cd speakprompt
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
 
-3. Run:
-   ```bash
-   ./build/speakprompt
-   ```
+# Run
+./build/speakprompt
+```
+
+#### Ubuntu / Debian
+```bash
+# Install dependencies
+sudo apt update
+sudo apt install cmake g++ libpulse-dev pkg-config
+
+# Clone and build
+git clone https://github.com/yourusername/speakprompt.git
+cd speakprompt
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+
+# Run
+./build/speakprompt
+```
+
+#### Arch Linux
+```bash
+# Install dependencies
+sudo pacman -S cmake gcc pulseaudio libpulse pkgconf
+
+# Clone and build
+git clone https://github.com/yourusername/speakprompt.git
+cd speakprompt
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+
+# Run
+./build/speakprompt
+```
 
 ### AppImage Usage
 
@@ -57,10 +89,32 @@ A Linux desktop application that provides real-time speech transcription for CLI
 
 ## Requirements
 
-- Linux (Fedora/Ubuntu tested)
-- PulseAudio or ALSA for audio capture (optional - demo mode available)
+- Linux (Fedora/Ubuntu/Arch tested)
+- **PipeWire** or **PulseAudio** for audio capture
 - C++17 compatible compiler
 - CMake 3.16+
+
+### Audio System Compatibility
+
+SpeakPrompt automatically detects and works with:
+
+- **PipeWire** (default on modern Fedora, Arch, Ubuntu 22.04+)
+- **PulseAudio** (traditional Linux audio systems)
+- **PulseAudio compatibility layer** on PipeWire systems
+
+**If audio capture fails to work:**
+```bash
+# Check if audio server is running
+pactl info
+
+# On PipeWire systems, ensure pipewire-pulse is running
+systemctl --user status pipewire pipewire-pulse
+
+# Install missing audio development packages:
+# Fedora/RHEL: sudo dnf install pulseaudio-libs-devel
+# Ubuntu/Debian: sudo apt install libpulse-dev
+# Arch Linux: sudo pacman -S libpulse
+```
 
 ## Development
 
@@ -84,12 +138,21 @@ speakprompt/
 
 ### Dependencies
 
+**Required:**
 - **C++17** compatible compiler
 - **CMake** 3.16+
-- **GTK3** development libraries
-- **PulseAudio** development libraries
-- **X11** development libraries
-- **Whisper.cpp** (included as submodule)
+- **PkgConfig** 
+- **PulseAudio development libraries** (for PipeWire compatibility)
+
+**Audio System:**
+- **PipeWire** with pulseaudio-libs-devel (modern systems)
+- **PulseAudio** with libpulse-dev (traditional systems)
+
+**Build-time:**
+- **Whisper.cpp** (included as git submodule)
+- **Threading library** (pthread)
+
+**Note:** No GUI dependencies required - SpeakPrompt runs in terminal mode
 
 ## License
 

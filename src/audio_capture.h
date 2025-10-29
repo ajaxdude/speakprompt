@@ -4,6 +4,12 @@
 #ifdef HAVE_PULSE
 #include <pulse/simple.h>
 #include <pulse/error.h>
+#include <pulse/context.h>
+#include <pulse/introspect.h>
+#include <pulse/mainloop.h>
+#include <pulse/operation.h>
+#include <pulse/stream.h>
+#include <pulse/thread-mainloop.h>
 #endif
 #include <vector>
 #include <functional>

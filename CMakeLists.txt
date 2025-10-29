@@ -68,8 +68,8 @@ endif()
 # Create executable
 add_executable(speakprompt ${SOURCES} ${HEADERS})
 
-# Link libraries
-set(LINK_LIBS whisper ${CMAKE_THREAD_LIBS_INIT})
+# Link libraries - threads will be added later if needed for PulseAudio
+set(LINK_LIBS whisper)
 
 if(GUI_BACKEND STREQUAL "GTK3")
     list(APPEND LINK_LIBS ${GTK3_LIBRARIES})
@@ -80,10 +80,21 @@ elseif(GUI_BACKEND STREQUAL "QT5")
 endif()
 
 if(PULSE_FOUND)
-    list(APPEND LINK_LIBS ${PULSE_LIBRARIES})
+    # Add pthread explicitly as PulseAudio requires it
+    find_package(Threads REQUIRED)
+    
+    # Use both libpulse-simple and libpulse for the simple API functions and error handling
+    list(APPEND LINK_LIBS pulse-simple pulse Threads::Threads)
+    
     target_include_directories(speakprompt PRIVATE ${PULSE_INCLUDE_DIRS})
     target_compile_options(speakprompt PRIVATE ${PULSE_CFLAGS_OTHER})
     target_compile_definitions(speakprompt PRIVATE HAVE_PULSE)
+    
+    message(STATUS "Using PulseAudio simple API library: pulse-simple")
+    message(STATUS "PulseAudio include dirs: ${PULSE_INCLUDE_DIRS}")
+    message(STATUS "PulseAudio cflags: ${PULSE_CFLAGS_OTHER}")
+else()
+    message(WARNING "PulseAudio development libraries not found. Audio capture will be disabled.")
 endif()
 
 # No X11 dependency needed for simplified version
