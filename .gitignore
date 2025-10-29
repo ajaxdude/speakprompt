@@ -1,0 +1,40 @@
+# Build directories
+build/
+build-*/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Executables
+speakprompt
+*.AppImage
+
+# Node modules and npm files
+node_modules/
+package-lock.json
+package.json
+
+# Whisper model files (too large for git)
+*.bin
+models/
+
+# Temporary files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AppImage tools
+appimagetool-*.AppImage
