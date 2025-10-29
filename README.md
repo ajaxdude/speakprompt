@@ -4,11 +4,11 @@ A Linux desktop application that provides real-time speech transcription for CLI
 
 ## Features
 
-- **Global Hotkey Support**: Configure custom hotkey to start/pause transcription
+- **Simple Interface**: Clean terminal-based interface
 - **Real-time Transcription**: Uses Whisper.cpp for live microphone transcription
 - **Terminal Output**: Transcription results displayed in terminal for easy copy-paste
+- **Minimal Dependencies**: Works without complex GUI frameworks
 - **AppImage Distribution**: Self-contained executable with minimal dependencies
-- **Simple GUI**: Minimal interface for hotkey configuration and status display
 
 ## Quick Start
 
@@ -46,18 +46,21 @@ A Linux desktop application that provides real-time speech transcription for CLI
 ## Usage
 
 1. Start SpeakPrompt application
-2. Configure your preferred hotkey (default: Ctrl+Shift+Space)
-3. Press the hotkey to start transcription
-4. Speak your command/prompt clearly
-5. Press the hotkey again to stop transcription
-6. Copy the transcribed text from terminal to your CLI tool
+2. Press Enter to start transcription
+3. Speak your command/prompt clearly
+4. Press Enter again to stop transcription
+5. Copy the transcribed text from terminal output to your CLI tool
+
+**Simple Controls:**
+- `Enter` - Start/Stop transcription
+- `Ctrl+C` - Quit application
 
 ## Requirements
 
 - Linux (Fedora/Ubuntu tested)
-- PulseAudio or ALSA for audio capture
-- X11 for global hotkey support
-- GTK3 libraries
+- PulseAudio or ALSA for audio capture (optional - demo mode available)
+- C++17 compatible compiler
+- CMake 3.16+
 
 ## Development
 

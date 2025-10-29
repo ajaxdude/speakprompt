@@ -1,17 +1,13 @@
 #include <iostream>
 #include <memory>
 #include <signal.h>
-#include <string>
-#ifndef NO_GUI
-#include <gtk/gtk.h>
-#include "gui.h"
-#endif
+#include <thread>
+#include <chrono>
 #include "audio_capture.h"
 #include "transcription_engine.h"
-#include "hotkey_manager.h"
 #include "terminal_output.h"
 
-class SpeakPromptApp {
+class SimpleSpeakPrompt {
 private:
     std::unique_ptr<AudioCapture> audio_capture;
     std::unique_ptr<TranscriptionEngine> transcription_engine;
@@ -19,83 +15,46 @@ private:
     bool is_recording = false;
 
 public:
-    SpeakPromptApp() {
-#ifdef NO_GUI
-        use_gui = false;
-#endif
-        
+    SimpleSpeakPrompt() {
         // Initialize components
         audio_capture = std::make_unique<AudioCapture>();
         transcription_engine = std::make_unique<TranscriptionEngine>();
-        hotkey_manager = std::make_unique<HotkeyManager>();
         terminal_output = std::make_unique<TerminalOutput>();
 
-        if (use_gui) {
-#ifndef NO_GUI
-            gui = std::make_unique<GUI>();
-            
-            // Set up GUI callbacks
-            gui->set_hotkey_changed_callback([this](const std::string& hotkey) {
-                hotkey_manager->set_hotkey(hotkey);
-            });
-
-            gui->set_toggle_recording_callback([this]() {
-                toggle_recording();
-            });
-#endif
-        }
-
-        // Set up hotkey and transcription callbacks
-        hotkey_manager->set_hotkey_pressed_callback([this]() {
-            toggle_recording();
-        });
-
+        // Set up transcription callback
         transcription_engine->set_transcription_callback([this](const std::string& text) {
             terminal_output->display_transcription(text);
         });
     }
 
-    void run() {
+    bool initialize() {
         if (!audio_capture->initialize()) {
             std::cerr << "Failed to initialize audio capture" << std::endl;
-            return;
+            return false;
         }
 
         if (!transcription_engine->initialize()) {
             std::cerr << "Failed to initialize transcription engine" << std::endl;
-            return;
-        }
-
-        if (!hotkey_manager->initialize()) {
-            std::cerr << "Failed to initialize hotkey manager" << std::endl;
-            return;
+            return false;
         }
 
         if (!terminal_output->initialize()) {
             std::cerr << "Failed to initialize terminal output" << std::endl;
-            return;
+            return false;
         }
 
-        if (use_gui) {
-#ifndef NO_GUI
-            gui->show();
-            gtk_main();
-#endif
-        } else {
-            run_console_mode();
-        }
+        return true;
     }
 
-private:
-    void run_console_mode() {
-        std::cout << "SpeakPrompt - Console Mode" << std::endl;
-        std::cout << "Press Enter to start/stop transcription (Ctrl+C to quit)" << std::endl;
-        std::cout << "Hotkey: " << hotkey_manager->get_hotkey() << std::endl;
-        std::cout << std::endl;
+    void run() {
+        std::cout << "\n=== SpeakPrompt - Simple Speech-to-Text ===" << std::endl;
+        std::cout << "Press Enter to start/stop transcription" << std::endl;
+        std::cout << "Press Ctrl+C to quit" << std::endl;
+        std::cout << "========================================\n" << std::endl;
 
         // Set up signal handler for Ctrl+C
         signal(SIGINT, [](int) {
-            std::cout << "\nExiting..." << std::endl;
+            std::cout << "\n\nExiting SpeakPrompt..." << std::endl;
             exit(0);
         });
 
@@ -105,6 +64,7 @@ private:
         }
     }
 
+private:
     void toggle_recording() {
         if (is_recording) {
             stop_recording();
@@ -114,49 +74,40 @@ private:
     }
 
     void start_recording() {
-        std::cout << "\nStarting transcription..." << std::endl;
+        std::cout << "\n🎙️  Starting transcription... (Speak now)" << std::endl;
         
         if (audio_capture->start_capture()) {
             transcription_engine->start_transcription();
             is_recording = true;
-            
-#ifndef NO_GUI
-            if (use_gui) {
-                gui->set_recording_state(true);
-            }
-#endif
-            
-            terminal_output->show_status("Recording started - Speak now");
+            terminal_output->show_status("Recording started");
         } else {
             std::cerr << "Failed to start audio capture" << std::endl;
         }
     }
 
     void stop_recording() {
-        std::cout << "\nStopping transcription..." << std::endl;
+        std::cout << "\n⏹️  Stopping transcription..." << std::endl;
         
         audio_capture->stop_capture();
         transcription_engine->stop_transcription();
         is_recording = false;
-        
-#ifndef NO_GUI
-        if (use_gui) {
-            gui->set_recording_state(false);
-        }
-#endif
-        
         terminal_output->show_status("Recording stopped");
+        
+        std::cout << "Press Enter to start again, Ctrl+C to quit" << std::endl;
     }
 };
 
-int main(int argc, char* argv[]) {
-#ifndef NO_GUI
-    gtk_init(&argc, &argv);
-#endif
-
+int main() {
     try {
-        SpeakPromptApp app;
+        SimpleSpeakPrompt app;
+        
+        if (!app.initialize()) {
+            std::cerr << "Failed to initialize application" << std::endl;
+            return 1;
+        }
+        
         app.run();
+        
     } catch (const std::exception& e) {
         std::cerr << "Application error: " << e.what() << std::endl;
         return 1;

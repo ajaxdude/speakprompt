@@ -43,10 +43,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Source files
 set(SOURCES
-    src/main.cpp
+    src/main_simple.cpp
     src/audio_capture.cpp
     src/transcription_engine.cpp
-    src/hotkey_manager.cpp
     src/terminal_output.cpp
 )
 
@@ -54,7 +53,6 @@ set(SOURCES
 set(HEADERS
     src/audio_capture.h
     src/transcription_engine.h
-    src/hotkey_manager.h
     src/terminal_output.h
 )
 
@@ -88,12 +86,7 @@ if(PULSE_FOUND)
     target_compile_definitions(speakprompt PRIVATE HAVE_PULSE)
 endif()
 
-# Try to find X11 for hotkey support
-find_package(X11)
-if(X11_FOUND)
-    list(APPEND LINK_LIBS ${X11_LIBRARIES})
-    target_include_directories(speakprompt PRIVATE ${X11_INCLUDE_DIR})
-endif()
+# No X11 dependency needed for simplified version
 
 target_link_libraries(speakprompt PRIVATE ${LINK_LIBS})
 
