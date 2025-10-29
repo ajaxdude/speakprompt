@@ -33,8 +33,12 @@ if(NOT GUI_BACKEND)
     add_definitions(-DNO_GUI)
 endif()
 
-# Whisper.cpp
+# Whisper.cpp with Vulkan support
 set(WHISPER_CPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/whisper.cpp)
+
+# Enable Vulkan support for Whisper.cpp
+option(GGML_VULKAN "Enable Vulkan support for Whisper.cpp" ON)
+
 add_subdirectory(${WHISPER_CPP_ROOT} whisper-cpp-build)
 
 # Include directories

@@ -46,35 +46,41 @@ void TerminalOutput::cleanup() {
 }
 
 void TerminalOutput::display_transcription(const std::string& text) {
-    if (text.empty()) {
+    if (text.empty() || text == "." || text == "[BLANK_AUDIO]") {
         return;
     }
     
     std::lock_guard<std::mutex> lock(output_mutex);
     
-    // Accumulate text
-    accumulated_text += text;
+    // Clean up the text - remove extra whitespace and make it continuous
+    std::string clean_text = text;
+    // Remove leading/trailing whitespace
+    clean_text.erase(0, clean_text.find_first_not_of(" \t\n\r"));
+    clean_text.erase(clean_text.find_last_not_of(" \t\n\r") + 1);
     
-    // Output to console with timestamp
-    auto now = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(now);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()) % 1000;
+    // Skip if text is empty after cleaning
+    if (clean_text.empty()) {
+        return;
+    }
     
-    std::cout << "\033[1;32m[" << std::put_time(std::localtime(&time_t), "%H:%M:%S");
-    std::cout << "." << std::setfill('0') << std::setw(3) << ms.count() << "]\033[0m ";
-    std::cout << "\033[1m" << text << "\033[0m" << std::endl;
-    std::cout.flush();
+    // Accumulate text with space for continuous paragraph
+    if (!accumulated_text.empty() && accumulated_text.back() != ' ') {
+        accumulated_text += " ";
+    }
+    accumulated_text += clean_text;
     
-    // Write to file
+    // Output to console without timestamp, as continuous text
+    std::cout << "\033[1m" << clean_text << " \033[0m" << std::flush;
+    
+    // Write to file as continuous text
     if (output_file.is_open()) {
-        output_file << text << " ";
+        output_file << clean_text << " ";
         output_file.flush();
     }
     
     // Call external callback if set
     if (external_callback) {
-        external_callback(text);
+        external_callback(clean_text);
     }
 }
 

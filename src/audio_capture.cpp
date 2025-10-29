@@ -125,6 +125,8 @@ bool AudioCapture::start_capture() {
     
     if (use_pulse) {
         capture_thread = std::thread(&AudioCapture::capture_pulse_loop, this);
+    } else if (!wav_file_path.empty()) {
+        capture_thread = std::thread(&AudioCapture::capture_wav_loop, this);
     } else {
         capture_thread = std::thread(&AudioCapture::capture_file_loop, this);
     }
@@ -212,4 +214,124 @@ void AudioCapture::capture_file_loop() {
         // Simulate real-time audio rate
         std::this_thread::sleep_for(std::chrono::milliseconds(buffer_size * 1000 / sample_rate));
     }
+}
+
+bool AudioCapture::read_wav_header(std::ifstream& file, int& file_sample_rate, int& file_channels, int& bits_per_sample, int& data_start) {
+    char header[44];
+    file.read(header, 44);
+    
+    if (file.gcount() < 44) {
+        return false;
+    }
+    
+    // Check RIFF header
+    if (strncmp(header, "RIFF", 4) != 0 || strncmp(header + 8, "WAVE", 4) != 0) {
+        return false;
+    }
+    
+    // Extract format information
+    file_channels = *reinterpret_cast<uint16_t*>(header + 22);
+    file_sample_rate = *reinterpret_cast<uint32_t*>(header + 24);
+    bits_per_sample = *reinterpret_cast<uint16_t*>(header + 34);
+    
+    // Find data chunk
+    data_start = 12; // Start after RIFF header
+    while (data_start < 100) { // Reasonable limit to search
+        file.seekg(data_start);
+        char chunk_id[5];
+        file.read(chunk_id, 4);
+        chunk_id[4] = '\0';
+        
+        if (strcmp(chunk_id, "data") == 0) {
+            data_start += 8; // Skip chunk ID and size
+            file.seekg(data_start);
+            return true;
+        }
+        
+        // Skip to next chunk
+        uint32_t chunk_size;
+        file.seekg(data_start + 4);
+        file.read(reinterpret_cast<char*>(&chunk_size), 4);
+        data_start += 8 + chunk_size;
+    }
+    
+    return false;
+}
+
+void AudioCapture::capture_wav_loop() {
+    std::ifstream wav_file(wav_file_path, std::ios::binary);
+    if (!wav_file.is_open()) {
+        std::cerr << "Failed to open WAV file: " << wav_file_path << std::endl;
+        is_capturing = false;
+        return;
+    }
+    
+    int file_sample_rate, file_channels, bits_per_sample, data_start;
+    if (!read_wav_header(wav_file, file_sample_rate, file_channels, bits_per_sample, data_start)) {
+        std::cerr << "Failed to read WAV file header" << std::endl;
+        is_capturing = false;
+        return;
+    }
+    
+    std::cout << "Playing WAV file: " << wav_file_path << std::endl;
+    std::cout << "Format: " << file_sample_rate << "Hz, " << file_channels << " channels, " << bits_per_sample << " bits" << std::endl;
+    
+    wav_file.seekg(data_start);
+    
+    const int buffer_size = 1024;
+    std::vector<float> float_buffer(buffer_size);
+    
+    if (bits_per_sample == 16) {
+        std::vector<int16_t> int_buffer(buffer_size);
+        
+        while (is_capturing.load() && wav_file.read(reinterpret_cast<char*>(int_buffer.data()), buffer_size * sizeof(int16_t))) {
+            int samples_read = wav_file.gcount() / sizeof(int16_t);
+            
+            // Convert to float and potentially resample if needed
+            for (int i = 0; i < samples_read; ++i) {
+                float_buffer[i] = static_cast<float>(int_buffer[i]) / 32768.0f;
+                
+                // Handle multi-channel by taking first channel
+                if (file_channels > 1) {
+                    i += (file_channels - 1);
+                    samples_read = std::min(samples_read, buffer_size);
+                }
+            }
+            
+            if (audio_data_callback) {
+                audio_data_callback(float_buffer);
+            }
+            
+            // Simulate real-time playback with slightly faster processing for better responsiveness
+            std::this_thread::sleep_for(std::chrono::milliseconds(buffer_size * 900 / sample_rate));
+        }
+    } else if (bits_per_sample == 32) {
+        std::vector<float> file_buffer(buffer_size);
+        
+        while (is_capturing.load() && wav_file.read(reinterpret_cast<char*>(file_buffer.data()), buffer_size * sizeof(float))) {
+            int samples_read = wav_file.gcount() / sizeof(float);
+            
+            // Handle multi-channel by taking first channel
+            if (file_channels > 1) {
+                int write_pos = 0;
+                for (int i = 0; i < samples_read; i += file_channels) {
+                    float_buffer[write_pos++] = file_buffer[i];
+                    if (write_pos >= buffer_size) break;
+                }
+                samples_read = write_pos;
+            } else {
+                float_buffer.assign(file_buffer.begin(), file_buffer.begin() + samples_read);
+            }
+            
+            if (audio_data_callback) {
+                audio_data_callback(float_buffer);
+            }
+            
+            // Simulate real-time playback with slightly faster processing for better responsiveness
+            std::this_thread::sleep_for(std::chrono::milliseconds(buffer_size * 900 / sample_rate));
+        }
+    }
+    
+    std::cout << "Finished playing WAV file" << std::endl;
+    is_capturing = false;
 }

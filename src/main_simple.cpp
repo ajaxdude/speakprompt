@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <thread>
 #include <chrono>
+#include <atomic>
 #include "audio_capture.h"
 #include "transcription_engine.h"
 #include "terminal_output.h"
@@ -25,6 +26,14 @@ public:
         transcription_engine->set_transcription_callback([this](const std::string& text) {
             terminal_output->display_transcription(text);
         });
+        
+        // Set up audio data callback
+        audio_capture->set_audio_data_callback([this](const std::vector<float>& audio) {
+            transcription_engine->add_audio_data(audio);
+        });
+        
+        // Use the provided WAV file for testing
+        audio_capture->set_wav_file_path("/home/papa/ai/stacks/whisper.cpp/samples/jfk.wav");
     }
 
     bool initialize() {
@@ -79,7 +88,7 @@ private:
         if (audio_capture->start_capture()) {
             transcription_engine->start_transcription();
             is_recording = true;
-            terminal_output->show_status("Recording started");
+            terminal_output->show_status("ON AIR");
         } else {
             std::cerr << "Failed to start audio capture" << std::endl;
         }
@@ -91,7 +100,7 @@ private:
         audio_capture->stop_capture();
         transcription_engine->stop_transcription();
         is_recording = false;
-        terminal_output->show_status("Recording stopped");
+        terminal_output->show_status("OFF AIR");
         
         std::cout << "Press Enter to start again, Ctrl+C to quit" << std::endl;
     }

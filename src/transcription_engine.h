@@ -26,7 +26,8 @@ private:
     
     // Configuration
     const int sample_rate = 16000;
-    const int chunk_samples = 30 * sample_rate; // 30 second chunks
+    const int chunk_samples = 2 * sample_rate; // 2 second chunks for real-time streaming
+    const int overlap_samples = 1 * sample_rate; // 1 second overlap for continuity
     std::vector<float> audio_buffer;
     
     std::function<void(const std::string&)> transcription_callback;

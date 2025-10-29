@@ -34,10 +34,13 @@ private:
 #endif
     
     std::function<void(const std::vector<float>&)> audio_data_callback;
+    std::string wav_file_path;
     
     void capture_loop();
     void capture_pulse_loop();
     void capture_file_loop();
+    void capture_wav_loop();
+    bool read_wav_header(std::ifstream& file, int& sample_rate, int& channels, int& bits_per_sample, int& data_start);
 
 public:
     AudioCapture();
@@ -49,6 +52,7 @@ public:
     void cleanup();
     
     void set_audio_data_callback(std::function<void(const std::vector<float>&)> callback);
+    void set_wav_file_path(const std::string& path) { wav_file_path = path; }
     
     bool is_active() const { return is_capturing.load(); }
     

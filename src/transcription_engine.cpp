@@ -12,8 +12,11 @@ TranscriptionEngine::~TranscriptionEngine() {
 }
 
 bool TranscriptionEngine::initialize() {
-    // Try to find the model file in several locations
+    // Try to find the model file in several locations, prioritizing faster models
     std::vector<std::string> model_paths = {
+        "./models/ggml-large-v3-turbo.bin",
+        "../models/ggml-large-v3-turbo.bin",
+        "/usr/share/speakprompt/models/ggml-large-v3-turbo.bin",
         "./models/ggml-base.en.bin",
         "../models/ggml-base.en.bin",
         "/usr/share/speakprompt/models/ggml-base.en.bin",
@@ -30,7 +33,7 @@ bool TranscriptionEngine::initialize() {
     }
     
     if (model_path.empty()) {
-        std::cerr << "Could not find whisper model file. Please download ggml-base.en.bin" << std::endl;
+        std::cerr << "Could not find whisper model file. Please download ggml-large-v3-turbo.bin or ggml-base.en.bin" << std::endl;
         return false;
     }
     
@@ -105,38 +108,34 @@ void TranscriptionEngine::set_transcription_callback(std::function<void(const st
 }
 
 void TranscriptionEngine::transcription_loop() {
-    std::vector<float> local_buffer;
-    
     while (is_transcribing.load()) {
         std::unique_lock<std::mutex> lock(queue_mutex);
-        queue_cv.wait(lock, [this] { return !audio_queue.empty() || !is_transcribing.load(); });
+        
+        // Wait for short time or new audio data (real-time processing)
+        queue_cv.wait_for(lock, std::chrono::milliseconds(100), [this] { 
+            return !audio_queue.empty() || !is_transcribing.load(); 
+        });
         
         if (!is_transcribing.load()) {
             break;
         }
         
-        // Collect all available audio data
+        // Collect available audio data
         while (!audio_queue.empty()) {
             auto audio_chunk = audio_queue.front();
             audio_queue.pop();
-            local_buffer.insert(local_buffer.end(), audio_chunk.begin(), audio_chunk.end());
+            audio_buffer.insert(audio_buffer.end(), audio_chunk.begin(), audio_chunk.end());
         }
         lock.unlock();
         
-        // Add to main buffer
-        audio_buffer.insert(audio_buffer.end(), local_buffer.begin(), local_buffer.end());
-        
-        // Process in chunks if we have enough data
+        // Process in chunks if we have enough data for real-time streaming
         while (audio_buffer.size() >= chunk_samples) {
             std::vector<float> chunk(audio_buffer.begin(), audio_buffer.begin() + chunk_samples);
             process_audio_chunk(chunk);
             
             // Remove processed chunk, but keep overlap for continuity
-            const int overlap_samples = 2 * sample_rate; // 2 second overlap
             audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + (chunk_samples - overlap_samples));
         }
-        
-        local_buffer.clear();
     }
 }
 
@@ -152,7 +151,7 @@ std::string TranscriptionEngine::transcribe_audio(const std::vector<float>& audi
         return "";
     }
     
-    // Set up whisper parameters
+    // Set up whisper parameters for real-time streaming
     whisper_full_params params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
     params.print_realtime = false;
     params.print_progress = false;
@@ -160,9 +159,13 @@ std::string TranscriptionEngine::transcribe_audio(const std::vector<float>& audi
     params.print_special = false;
     params.translate = false;
     params.language = "en";
-    params.n_threads = 4;
+    params.n_threads = 8;  // Use more threads for faster processing
     params.offset_ms = 0;
     params.duration_ms = (audio.size() * 1000) / sample_rate;
+    
+    // Real-time optimizations
+    params.max_tokens = 32;  // Limit output tokens for faster processing
+    params.audio_ctx = 0;    // Use full context for better accuracy
     
     // Run inference
     int result = whisper_full(ctx, params, audio.data(), audio.size());
