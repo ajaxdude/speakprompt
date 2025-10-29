@@ -1,6 +1,6 @@
 # SpeakPrompt
 
-A high-performance Linux terminal application that provides **real-time speech transcription** for CLI developers. Uses optimized Whisper.cpp with Vulkan GPU acceleration for instant, accurate transcription of spoken commands and prompts.
+A high-performance Linux terminal application that provides **real-time speech transcription** for CLI developers or anyone wanting to copy and paste speach-to-text. Uses optimized Whisper.cpp with Vulkan GPU acceleration for instant, accurate transcription of spoken commands and prompts. Coded with Factory Droid using GLM 4.6 LLM as my first open-source project.
 
 ## ✨ Features
 
@@ -20,7 +20,7 @@ A high-performance Linux terminal application that provides **real-time speech t
 # Fedora/RHEL
 sudo dnf install cmake gcc-c++ pkg-config pulseaudio-libs-devel vulkan-devel SDL2 SDL2-devel
 
-# Ubuntu/Debian  
+# Ubuntu/Debian
 sudo apt install cmake g++ pkg-config libpulse-dev libvulkan-dev libsdl2-dev
 
 # Arch Linux
@@ -52,7 +52,7 @@ sudo eopkg install cmake gcc pkgconfig pulseaudio-devel vulkan-devel sdl2-devel
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/speakprompt.git
+git clone https://github.com/ajaxdude/speakprompt.git
 cd speakprompt
 
 # Configure with Vulkan and SDL2 support
@@ -108,7 +108,7 @@ speakprompt/
 ├── src/
 │   ├── main_simple.cpp          # Entry point & user interaction
 │   ├── audio_capture.h/cpp      # Real-time audio capture (mic/WAV)
-│   ├── transcription_engine.h/cpp # Whisper.cpp integration  
+│   ├── transcription_engine.h/cpp # Whisper.cpp integration
 │   └── terminal_output.h/cpp    # Clean output formatting
 ├── models/                      # Whisper model files
 ├── whisper.cpp/                 # Whisper.cpp submodule
