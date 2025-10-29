@@ -31,51 +31,9 @@ bool AudioCapture::initialize() {
     if (pa_handle) {
         use_pulse = true;
         
-        // Try to detect if we're using PipeWire
-        const char* server_env = getenv("PULSE_SERVER");
-        if (server_env && strstr(server_env, "pipewire")) {
-            std::cout << "Using PipeWire (via PulseAudio compatibility) for audio capture" << std::endl;
-        } else {
-            // Check by trying to get server info
-            pa_mainloop* mainloop = pa_mainloop_new();
-            if (mainloop) {
-                pa_context* context = pa_context_new(pa_mainloop_get_api(mainloop), "SpeakPrompt-detect");
-                if (context) {
-                    pa_context_connect(context, nullptr, PA_CONTEXT_NOFLAGS, nullptr);
-                    // Give it a moment to connect
-                    pa_mainloop_iterate(mainloop, 100, nullptr);
-                    if (pa_context_get_state(context) == PA_CONTEXT_READY) {
-                        pa_operation* op = pa_context_get_server_info(context, 
-                            [](pa_context*, const pa_server_info* info, void* userdata) {
-                                if (info && info->server_name && strstr(info->server_name, "PipeWire")) {
-                                    std::cout << "Detected PipeWire audio server" << std::endl;
-                                } else if (info && info->server_name) {
-                                    std::cout << "Detected PulseAudio server: " << info->server_name << std::endl;
-                                }
-                            }, nullptr);
-                        if (op) {
-                            pa_operation_unref(op);
-                        }
-                        pa_mainloop_iterate(mainloop, 100, nullptr);
-                    }
-                    pa_context_disconnect(context);
-                    pa_context_unref(context);
-                }
-                pa_mainloop_free(mainloop);
-            }
-            std::cout << "Using PulseAudio for audio capture" << std::endl;
-        }
+        std::cout << "Using PulseAudio for audio capture" << std::endl;
         
-        // Test if we can actually read from the audio device
-        std::vector<int16_t> test_buffer(1024);
-        int result = pa_simple_read(pa_handle, test_buffer.data(), 
-                                  test_buffer.size() * sizeof(int16_t), &error);
-        if (result == 0) {
-            std::cout << "Audio capture test successful" << std::endl;
-        } else {
-            std::cout << "Warning: Audio capture test failed: " << pa_strerror(error) << std::endl;
-            std::cout << "This might indicate a permissions or device access issue" << std::endl;
-        }
+
         
         return true;
     } else {
@@ -101,11 +59,6 @@ bool AudioCapture::initialize() {
     // Fallback to demo mode
     use_pulse = false;
     std::cout << "Warning: No audio capture available, running in demo mode" << std::endl;
-    std::cout << "Audio will be simulated for testing purposes" << std::endl;
-    std::cout << "Possible solutions:" << std::endl;
-    std::cout << "1. Install PipeWire or PulseAudio development packages" << std::endl;
-    std::cout << "2. Check if audio server is running: pactl info" << std::endl;
-    std::cout << "3. Check microphone permissions" << std::endl;
     return true;
 }
 

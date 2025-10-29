@@ -43,7 +43,11 @@ bool TranscriptionEngine::initialize() {
         return false;
     }
     
-    std::cout << "Whisper model loaded successfully from: " << model_path << std::endl;
+    // Extract just the model filename from the path
+    std::string model_name = model_path.substr(model_path.find_last_of("/\\") + 1);
+    // Remove .bin extension and add brackets
+    model_name = model_name.substr(0, model_name.find_last_of('.'));
+    std::cout << "Loaded [" << model_name << "] for real-time transcription" << std::endl;
     return true;
 }
 

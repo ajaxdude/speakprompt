@@ -24,10 +24,7 @@ bool TerminalOutput::initialize() {
     output_file.close();
     output_file.open(output_filename, std::ios::trunc);
     
-    std::cout << "SpeakPrompt - Terminal Output Active" << std::endl;
-    std::cout << "Transcription will be written to: " << output_filename << std::endl;
-    std::cout << "Use 'tail -f " << output_filename << "' to follow along" << std::endl;
-    std::cout << std::endl;
+    
     
     return true;
 }
