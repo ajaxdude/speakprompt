@@ -57,8 +57,23 @@ option(WHISPER_SDL2 "Enable SDL2 support for Whisper.cpp" ON)
 
 add_subdirectory(${WHISPER_CPP_ROOT} whisper-cpp-build)
 
+# LLaMA.cpp with Vulkan support for text processing
+set(LLAMA_CPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp)
+
+# Enable Vulkan support for LLaMA.cpp
+set(GGML_VULKAN ON CACHE BOOL "Enable Vulkan support for LLaMA.cpp")
+set(LLAMA_VULKAN ON CACHE BOOL "Enable Vulkan backend for LLaMA.cpp")
+
+# LLaMA.cpp build options
+option(LLAMA_BUILD_SERVER "Build llama.cpp server" OFF)
+option(LLAMA_BUILD_EXAMPLES "Build llama.cpp examples" OFF)
+option(LLAMA_BUILD_TESTS "Build llama.cpp tests" OFF)
+
+add_subdirectory(${LLAMA_CPP_ROOT} llama-cpp-build)
+
 # Include directories
 include_directories(${WHISPER_CPP_ROOT})
+include_directories(${LLAMA_CPP_ROOT})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Source files
@@ -67,6 +82,7 @@ set(SOURCES
     src/audio_capture.cpp
     src/transcription_engine.cpp
     src/terminal_output.cpp
+    src/llm_processor.cpp
 )
 
 # Headers
@@ -74,6 +90,7 @@ set(HEADERS
     src/audio_capture.h
     src/transcription_engine.h
     src/terminal_output.h
+    src/llm_processor.h
 )
 
 # Add GUI files only if GUI backend is available
@@ -89,7 +106,7 @@ endif()
 add_executable(speakprompt ${SOURCES} ${HEADERS})
 
 # Link libraries - threads will be added later if needed for PulseAudio
-set(LINK_LIBS whisper)
+set(LINK_LIBS whisper llama ggml-vulkan ggml-base)
 
 if(GUI_BACKEND STREQUAL "GTK3")
     list(APPEND LINK_LIBS ${GTK3_LIBRARIES})
