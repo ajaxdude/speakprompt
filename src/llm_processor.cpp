@@ -30,12 +30,22 @@ bool LLMProcessor::initialize(const std::string& model_file_path) {
     model_params.use_mmap = true;
     model_params.use_mlock = false;
     
-    // Suppress llama.cpp output during model loading
+    // Suppress all llama.cpp output during model loading
     std::cout.setstate(std::ios::failbit);
     std::cerr.setstate(std::ios::failbit);
     
+    // Save original stdout/stderr and redirect to /dev/null
+    FILE *stdout_orig = stdout, *stderr_orig = stderr;
+    FILE *devnull = fopen("/dev/null", "w");
+    stdout = devnull;
+    stderr = devnull;
+    
     model = llama_model_load_from_file(model_path.c_str(), model_params);
     
+    // Restore original stdout/stderr and streams
+    stdout = stdout_orig;
+    stderr = stderr_orig;
+    fclose(devnull);
     std::cout.clear(std::ios::failbit);
     std::cerr.clear(std::ios::failbit);
     
@@ -51,7 +61,22 @@ bool LLMProcessor::initialize(const std::string& model_file_path) {
     ctx_params.n_threads = 8;
     ctx_params.n_threads_batch = 8;
     
+    // Suppress context initialization output
+    std::cout.setstate(std::ios::failbit);
+    std::cerr.setstate(std::ios::failbit);
+    
+    FILE *stdout_orig2 = stdout, *stderr_orig2 = stderr;
+    FILE *devnull2 = fopen("/dev/null", "w");
+    stdout = devnull2;
+    stderr = devnull2;
+    
     ctx = llama_init_from_model(model, ctx_params);
+    
+    stdout = stdout_orig2;
+    stderr = stderr_orig2;
+    fclose(devnull2);
+    std::cout.clear(std::ios::failbit);
+    std::cerr.clear(std::ios::failbit);
     if (!ctx) {
         std::cerr << "Failed to create LLM context" << std::endl;
         llama_model_free(model);
