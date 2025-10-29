@@ -131,17 +131,16 @@ private:
         std::string raw_text = terminal_output->get_accumulated_text();
         
         if (!raw_text.empty() && llm_processor && !llm_processor->is_busy()) {
-            std::cout << "\n🤖 Processing text with AI..." << std::endl;
+            std::cout << "\n⏹️  Transcription stopped." << std::endl;
+            std::cout << "Optimizing using [Mistral-small]..." << std::endl;
             
             // Process text asynchronously with LLM
             llm_processor->process_text_async(raw_text, [this](const std::string& cleaned_text) {
                 if (!cleaned_text.empty()) {
-                    // Clear the accumulated text and show the cleaned version
-                    terminal_output->reset_accumulated_text();
-                    terminal_output->display_transcription("✨ Cleaned text:");
+                    terminal_output->show_status("OPTIMIZED START");
                     terminal_output->display_transcription(cleaned_text);
+                    terminal_output->show_status("OPTIMIZED END");
                 }
-                std::cout << "\n⏹️  Transcription stopped." << std::endl;
                 std::cout << "Press Enter to start again, Ctrl+C to quit" << std::endl;
             });
         } else {
