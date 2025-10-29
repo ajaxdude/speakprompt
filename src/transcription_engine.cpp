@@ -37,7 +37,21 @@ bool TranscriptionEngine::initialize() {
         return false;
     }
     
+    // Save original stdout and stderr
+    FILE *stdout_orig = stdout, *stderr_orig = stderr;
+    
+    // Suppress whisper.cpp verbose output by redirecting to /dev/null
+    FILE *devnull = fopen("/dev/null", "w");
+    stdout = devnull;
+    stderr = devnull;
+    
     ctx = whisper_init_from_file(model_path.c_str());
+    
+    // Restore original stdout and stderr
+    stdout = stdout_orig;
+    stderr = stderr_orig;
+    fclose(devnull);
+    
     if (!ctx) {
         std::cerr << "Failed to initialize whisper context" << std::endl;
         return false;
