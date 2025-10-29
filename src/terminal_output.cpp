@@ -84,8 +84,8 @@ void TerminalOutput::display_transcription(const std::string& text) {
 void TerminalOutput::show_status(const std::string& status) {
     std::lock_guard<std::mutex> lock(output_mutex);
     
-    // Output status to console
-    std::cout << "\033[1;34m[STATUS]\033[0m " << status << std::endl;
+    // Output status to console with spacing
+    std::cout << std::endl << "\033[1;34m[STATUS]\033[0m " << status << std::endl;
     std::cout.flush();
     
     // Write to file
