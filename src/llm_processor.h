@@ -16,6 +16,7 @@ private:
     llama_model* model;
     llama_context* ctx;
     std::string model_path;
+    std::string model_name;
     bool is_initialized;
     std::atomic<bool> is_processing;
     
@@ -44,6 +45,9 @@ public:
     
     // Cancel current processing
     void cancel_processing();
+    
+    // Get model information
+    std::string get_model_name() const;
     
 private:
     // Internal processing function

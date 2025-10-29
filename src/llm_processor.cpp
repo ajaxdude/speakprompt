@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <algorithm>
 
 LLMProcessor::LLMProcessor() : model(nullptr), ctx(nullptr), is_initialized(false), is_processing(false) {
 }
@@ -59,7 +60,40 @@ bool LLMProcessor::initialize(const std::string& model_file_path) {
     }
     
     is_initialized = true;
-    std::cout << "LLM processor initialized with model: " << model_path << std::endl;
+    
+    // Extract model name from the loaded model
+    char desc_buf[512];
+    int desc_len = llama_model_desc(model, desc_buf, sizeof(desc_buf));
+    if (desc_len > 0) {
+        model_name = std::string(desc_buf);
+        // Extract just the first part (e.g., "magistral-small-2509" from full description)
+        size_t space_pos = model_name.find(' ');
+        if (space_pos != std::string::npos) {
+            model_name = model_name.substr(0, space_pos);
+        }
+        // Clean up and format nicely
+        std::replace(model_name.begin(), model_name.end(), '-', ' ');
+        // Capitalize first letter of each word
+        bool capitalize = true;
+        for (char& c : model_name) {
+            if (capitalize && c >= 'a' && c <= 'z') {
+                c = c - ('a' - 'A');
+                capitalize = false;
+            } else if (c == ' ') {
+                capitalize = true;
+            }
+        }
+    } else {
+        // Fallback: extract from filename
+        model_name = model_path.substr(model_path.find_last_of("/\\") + 1);
+        size_t dot_pos = model_name.find_last_of('.');
+        if (dot_pos != std::string::npos) {
+            model_name = model_name.substr(0, dot_pos);
+        }
+        std::replace(model_name.begin(), model_name.end(), '-', ' ');
+    }
+    
+    std::cout << "LLM processor initialized with model: " << model_name << std::endl;
     return true;
 }
 
@@ -262,4 +296,8 @@ std::string LLMProcessor::generate_response(const std::string& prompt) {
     response.erase(response.find_last_not_of(" \t\n\r") + 1);
     
     return response;
+}
+
+std::string LLMProcessor::get_model_name() const {
+    return model_name;
 }

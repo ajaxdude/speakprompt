@@ -132,7 +132,7 @@ private:
         
         if (!raw_text.empty() && llm_processor && !llm_processor->is_busy()) {
             std::cout << "\n⏹️  Transcription stopped." << std::endl;
-            std::cout << "Optimizing using [Mistral-small]..." << std::endl;
+            std::cout << "🧠 Optimizing using [" << llm_processor->get_model_name() << "]..." << std::endl;
             
             // Process text asynchronously with LLM
             llm_processor->process_text_async(raw_text, [this](const std::string& cleaned_text) {
