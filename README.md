@@ -12,7 +12,7 @@ A high-performance Linux terminal application that provides **real-time speech t
 - **📝 Continuous Output**: Clean paragraph formatting without timestamps
 - **⌨️ Simple Controls**: Enter to start/stop, Ctrl+C to quit
 
-## :fire: Screenshot of SpeakPromt in Action:
+## :fire: Screenshot of SpeakPrompt in Action:
 
 ![alt text](https://github.com/ajaxdude/speakprompt/blob/main/pix/v1.png?raw=true)
 
