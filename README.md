@@ -14,7 +14,7 @@ A high-performance Linux terminal application that provides **real-time speech t
 
 ## :fire: Screenshot of SpeakPromt in Action:
 
-![alt text](https://github.com/ajaxdude/speakprompt/pix/v1.png?raw=true)
+![alt text](https://github.com/ajaxdude/speakprompt/pix/v1.png)
 
 ## 🚀 Quick Start
 
