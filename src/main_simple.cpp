@@ -57,9 +57,9 @@ public:
 
         // Initialize LLM processor - try multiple model paths
         std::vector<std::string> llm_model_paths = {
+            "/home/papa/ai/projects/speakprompt/models/llm/Magistral-Small-2509-Q4_K_M.gguf",
             "./models/llm/Magistral-Small-2509-Q4_K_M.gguf",
-            "../models/llm/Magistral-Small-2509-Q4_K_M.gguf",
-            "/home/papa/ai/projects/speakprompt/models/llm/Magistral-Small-2509-Q4_K_M.gguf"
+            "../models/llm/Magistral-Small-2509-Q4_K_M.gguf"
         };
         
         bool llm_initialized = false;

@@ -1,12 +1,13 @@
 # SpeakPrompt
 
-A high-performance Linux terminal application that provides **real-time speech transcription** for CLI developers or anyone wanting to copy and paste speach-to-text. Uses optimized Whisper.cpp with Vulkan GPU acceleration for instant, accurate transcription of spoken commands and prompts. Coded with Factory Droid using GLM 4.6 LLM as my first open-source project.
+A high-performance Linux terminal application that provides **real-time speech transcription with AI-powered text optimization** for CLI developers or anyone wanting to copy and paste speech-to-text. Uses optimized Whisper.cpp with Vulkan GPU acceleration for instant, accurate transcription, and LLaMA.cpp with local AI models to clean up and optimize transcribed text. Coded with Factory Droid using GLM 4.6 LLM as my first open-source project.
 
 ## ✨ Features
 
 - **🚀 Real-time Streaming**: 2-second chunk processing with 1-second overlap for immediate feedback
-- **⚡ Vulkan GPU Acceleration**: Utilizes AMD/NVIDIA GPUs for 10x faster transcription
+- **⚡ Vulkan GPU Acceleration**: Utilizes AMD/NVIDIA GPUs for 10x faster transcription and AI processing
 - **🎯 High Accuracy**: Large V3 Turbo model with optimized parameters
+- **🧠 AI Text Optimization**: Local LLaMA.cpp integration with Magistral Small model for intelligent text cleanup
 - **🎙️ Smart Audio Capture**: PipeWire/PulseAudio support with automatic detection
 - **📝 Continuous Output**: Clean paragraph formatting without timestamps
 - **⌨️ Simple Controls**: Enter to start/stop, Ctrl+C to quit
@@ -62,8 +63,12 @@ cmake .. -DGGML_VULKAN=1 -DWHISPER_SDL2=ON
 # Build
 make -j$(nproc)
 
-# Download the optimized model (optional - auto-downloads if missing)
+# Download the optimized Whisper model (optional - auto-downloads if missing)
 wget -O ../models/ggml-large-v3-turbo.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin
+
+# Download the LLM model for text optimization (optional but recommended)
+mkdir -p ../models/llm
+wget -O ../models/llm/Magistral-Small-2509-Q4_K_M.gguf https://huggingface.co/MaziyarPanahi/Magistral-Small-2509-GGUF/resolve/main/Magistral-Small-2509-Q4_K_M.gguf
 
 # Run
 ./speakprompt
@@ -76,25 +81,43 @@ wget -O ../models/ggml-large-v3-turbo.bin https://huggingface.co/ggerganov/whisp
 3. **Speak clearly** into your microphone
 4. **Watch real-time transcription** appear as continuous text
 5. **Press Enter** again to stop → Shows `[STATUS] OFF AIR`
-6. **Copy** the transcribed text for use in CLI tools
+6. **AI Optimization**: The app will automatically optimize your transcribed text using the local LLM
+7. **Copy** the optimized text for use in CLI tools
 
 ### Controls
 - `Enter` - Toggle recording ON/OFF
 - `Ctrl+C` - Quit application
 
+### AI Text Optimization
+When you stop recording, the application automatically:
+- Removes filler words (um, uh, like, you know)
+- Fixes grammar and sentence structure
+- Makes text more concise and coherent
+- Preserves original meaning and key points
+- Organizes rambling thoughts into clear sentences
+
+*Note: The LLM model is optional. If not found, the app will provide raw transcriptions.*
+
 ## 🎯 Performance
 
 - **Response Time**: 2-3 seconds (vs 30+ seconds in basic implementations)
-- **Model**: Large V3 Turbo (1.6GB) with GPU acceleration
+- **Transcription Model**: Large V3 Turbo (1.6GB) with GPU acceleration
+- **AI Model**: Magistral Small (13GB) with Vulkan GPU acceleration
 - **Processing**: 8-thread parallel processing with Vulkan
 - **Audio**: Real-time 16kHz, 16-bit mono capture
-- **Output**: Clean paragraph format without timestamps or silence markers
+- **Output**: Clean, AI-optimized text without timestamps or silence markers
 
 ## 🔧 Configuration
 
-### Model Priority (auto-selects first available):
+### Whisper Model Priority (auto-selects first available):
 1. `ggml-large-v3-turbo.bin` (Fastest & most accurate)
 2. `ggml-base.en.bin` (Fallback option)
+
+### LLM Model for Text Optimization:
+- **Model**: `Magistral-Small-2509-Q4_K_M.gguf` (13GB, 4-bit quantized)
+- **Location**: `models/llm/` directory
+- **GPU**: Uses Vulkan for acceleration (CPU fallback if GPU unavailable)
+- **Optional**: Application works without LLM model (raw transcription only)
 
 ### Audio System Support:
 - **PipeWire** (Modern Linux - Fedora, Arch, Ubuntu 22.04+)
@@ -109,9 +132,14 @@ speakprompt/
 │   ├── main_simple.cpp          # Entry point & user interaction
 │   ├── audio_capture.h/cpp      # Real-time audio capture (mic/WAV)
 │   ├── transcription_engine.h/cpp # Whisper.cpp integration
-│   └── terminal_output.h/cpp    # Clean output formatting
-├── models/                      # Whisper model files
+│   ├── terminal_output.h/cpp    # Clean output formatting
+│   └── llm_processor.h/cpp      # LLaMA.cpp integration for AI text optimization
+├── models/
+│   ├── ggml-large-v3-turbo.bin  # Whisper transcription model
+│   └── llm/                     # LLM models directory
+│       └── Magistral-Small-2509-Q4_K_M.gguf  # AI text optimization model
 ├── whisper.cpp/                 # Whisper.cpp submodule
+├── llama.cpp/                   # LLaMA.cpp submodule
 ├── CMakeLists.txt               # Build configuration
 └── README.md                    # This file
 ```
@@ -196,6 +224,8 @@ sudo pacman -S cmake gcc pkgconf pulseaudio libpulse vulkan-devel sdl2
 ```
 
 ### Model Issues
+
+#### Whisper Model
 ```bash
 # Check if model exists
 ls -la models/ggml-large-v3-turbo.bin
@@ -206,6 +236,30 @@ wget -O models/ggml-large-v3-turbo.bin https://huggingface.co/ggerganov/whisper.
 
 # Alternative model (smaller, faster download)
 wget -O models/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+```
+
+#### LLM Model (for AI text optimization)
+```bash
+# Check if LLM model exists
+ls -la models/llm/Magistral-Small-2509-Q4_K_M.gguf
+
+# Download LLM model if missing (13GB - large download)
+mkdir -p models/llm
+wget -O models/llm/Magistral-Small-2509-Q4_K_M.gguf https://huggingface.co/MaziyarPanahi/Magistral-Small-2509-GGUF/resolve/main/Magistral-Small-2509-Q4_K_M.gguf
+
+# If LLM model loading takes too long, try reducing GPU layers or using CPU only
+# Edit src/llm_processor.cpp and change model_params.n_gpu_layers = 0;
+```
+
+### LLM Processing Issues
+```bash
+# Check if Vulkan is working for LLM acceleration
+vulkaninfo --summary
+
+# If LLM is slow, ensure you have enough VRAM (at least 16GB recommended)
+# For lower VRAM systems, the model may fall back to CPU processing
+
+# Application will still work without LLM model - it will provide raw transcriptions
 ```
 
 ## 📄 License
