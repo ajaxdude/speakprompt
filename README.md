@@ -1,6 +1,6 @@
 # SpeakPrompt
 
-A high-performance Linux terminal application that provides **real-time speech transcription with AI-powered text optimization** for CLI developers or anyone wanting to copy and paste speech-to-text. Uses optimized Whisper.cpp with Vulkan GPU acceleration for instant, accurate transcription, and LLaMA.cpp with local AI models to clean up and optimize transcribed text. Coded with Factory Droid using GLM 4.6 LLM as my first open-source project.
+A high-performance Linux terminal application that provides **real-time speech transcription with AI-powered text optimization** for CLI developers or anyone wanting to copy and paste speech-to-text. Uses optimized Whisper.cpp with Vulkan GPU acceleration for instant transcription, and LLaMA.cpp with local AI models to clean up and optimize transcribed text. In short you speak your prompt and AI cleans it up for you. Coded with Factory Droid using GLM 4.6 LLM as my first open-source project.
 
 ## ✨ Features
 
@@ -11,6 +11,10 @@ A high-performance Linux terminal application that provides **real-time speech t
 - **🎙️ Smart Audio Capture**: PipeWire/PulseAudio support with automatic detection
 - **📝 Continuous Output**: Clean paragraph formatting without timestamps
 - **⌨️ Simple Controls**: Enter to start/stop, Ctrl+C to quit
+
+## :fire: Screenshot of SpeakPromt in Action:
+
+![alt text](https://github.com/ajaxdude/speakprompt/blob/pix/v1.png?raw=true)
 
 ## 🚀 Quick Start
 
