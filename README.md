@@ -111,6 +111,12 @@ When you stop recording, the application automatically:
 - **Audio**: Real-time 16kHz, 16-bit mono capture
 - **Output**: Clean, AI-optimized text without timestamps or silence markers
 
+## ☕ Buy Me a Coffee
+
+If you find SpeakPrompt useful and want to support my open-source development work, consider buying me a coffee! Your support helps me continue developing and maintaining this project.
+
+![Bitcoin Address](https://github.com/ajaxdude/speakprompt/blob/main/pix/bitcoinaddress.png?raw=true)
+
 ## 🔧 Configuration
 
 ### Whisper Model Priority (auto-selects first available):
